@@ -1,0 +1,102 @@
+<!-- Modal update-->
+<div class="modal fade" id="updateModal" data-backdrop="static" data-keyboard="false" tabindex="-1"
+    aria-labelledby="updateModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <form [formGroup]="updateTable" (ngSubmit)="onUpdate()">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="updateModalLabel">Modification de la table</h3>
+                    <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body row">
+                    <mat-form-field class="col-12" appearance="fill">
+                        <mat-label>Nom de la table</mat-label>
+                        <input formControlName="name" required type="text" matInput placeholder="Ex:Manathan">
+                    </mat-form-field>
+                    <mat-form-field class="col-12" appearance="fill">
+                        <mat-label>Nombre de place</mat-label>
+                        <input formControlName="place" required type="text" matInput>
+                    </mat-form-field>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">fermer</button>
+                    <button type="submit" class="btn btn-warning">Modifier</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <mat-tab-group>
+        <mat-tab label="Commandes">
+            <mat-button-toggle-group class="mt-3"  name="table" aria-label="Font Style">
+                <mat-button-toggle (change)="selectedCommande=null" (click)="selectTable(table)" *ngFor="let table of tables;trackBy:util.trackById"
+                    value="{{table.name}}">
+                    {{table.name}}
+                </mat-button-toggle>
+            </mat-button-toggle-group>
+            <mat-button-toggle-group class="my-3"  name="table" aria-label="Font Style">
+                <mat-button-toggle (click)="selectCommande(commande)" *ngFor="let commande of commandes;trackBy:util.trackById"
+                    [value]="commande.id">
+                    Commande n°{{commande.number}}
+                </mat-button-toggle>
+                <button *ngIf="selectedTable" mat-stroked-button (click)="addCommande()">Ajouter une commande</button>
+            </mat-button-toggle-group>
+
+            <mat-tab-group *ngIf="selectedCommande">
+                <mat-tab label="Panier">
+                    <mat-tab-group>
+                        <mat-tab label="Prendre commande">
+
+                        </mat-tab>
+                        <mat-tab label="Vue du panier">
+                            <mat-tab-group>
+                                <mat-tab label="Non signalé">
+
+                                </mat-tab>
+                                <mat-tab label="Vue générale">
+                                    <button mat-stroked-button (click)="finishCommande()">Marquer la commande terminée</button>
+                                </mat-tab>
+                            </mat-tab-group>
+                        </mat-tab>
+                    </mat-tab-group>
+                </mat-tab>
+                <mat-tab label="Signalé">
+
+                </mat-tab>
+            </mat-tab-group>
+        </mat-tab>
+        <mat-tab label="A faire">
+            Content 2
+        </mat-tab>
+        <mat-tab label="Tables">
+            <mat-tab-group>
+                <mat-tab label="Vue globale">
+                    <mat-expansion-panel hideToggle *ngFor="let table of tables;trackBy:util.trackById">
+                        <mat-expansion-panel-header>
+                            <mat-panel-title>
+                                Table {{table.name}} {{table.place}} place(s)
+                            </mat-panel-title>
+                        </mat-expansion-panel-header>
+                        <button mat-stroked-button (click)="updateData(table)">Modifier</button>
+                        <button mat-stroked-button color="warn" (click)="deleteTable(table)">Supprimer</button>
+                    </mat-expansion-panel>
+                </mat-tab>
+                <mat-tab label="Ajout d'une table">
+                    <form [formGroup]="addTable">
+                        <mat-form-field class="col-12" appearance="fill">
+                            <mat-label>Nom de la table</mat-label>
+                            <input required type="text" matInput placeholder="Ex:Manathan" formControlName="name">
+                        </mat-form-field>
+                        <mat-form-field class="col-12" appearance="fill">
+                            <mat-label>Nombre de place</mat-label>
+                            <input required type="number" matInput min="0" step="1" formControlName="place">
+                        </mat-form-field>
+                    </form>
+                    <button mat-stroked-button (click)="saveTable()">Enregister la table</button>
+                </mat-tab>
+            </mat-tab-group>
+        </mat-tab>
+    </mat-tab-group>
+</div>

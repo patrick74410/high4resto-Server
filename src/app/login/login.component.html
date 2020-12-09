@@ -1,0 +1,31 @@
+<div class="col-md-6 offset-md-3 mt-5">
+    <div class="card">
+        <h4 class="card-header">Connexion</h4>
+        <div class="card-body">
+            <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+                <mat-form-field class="col-12" appearance="fill">
+                    <mat-label>Identifiant</mat-label>
+                    <input formControlName="username" type="text" matInput
+                        [ngClass]="{ 'is-invalid': submitted && f.username.errors }">
+                    <div *ngIf="submitted && f.username.errors" class="invalid-feedback">
+                        <div *ngIf="f.username.errors.required">L'identifiant est requis</div>
+                    </div>
+                </mat-form-field>
+
+                <mat-form-field class="col-12" appearance="fill">
+                    <mat-label>Mot de passe</mat-label>
+                    <input formControlName="password" type="password" matInput
+                        [ngClass]="{ 'is-invalid': submitted && f.password.errors }">
+                    <div *ngIf="submitted && f.password.errors" class="invalid-feedback">
+                        <div *ngIf="f.password.errors.required">Le mot de passe est requis</div>
+                    </div>
+                </mat-form-field>
+
+                <div class="mb-3">
+                    <button [disabled]="loading" mat-stroked-button><span *ngIf="loading"
+                            class="spinner-border spinner-border-sm mr-1"></span> Connexion</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

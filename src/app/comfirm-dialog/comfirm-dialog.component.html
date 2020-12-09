@@ -1,0 +1,22 @@
+<div *ngIf="message" class="modal" tabindex="-1" role="dialog" style="display:block!important">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div *ngIf="message?.type == 'confirm'" class="modal-body">
+                <div class="modal-header">
+                    <h2 class="modal-title">Suppression</h2>
+                    <button type="button" (click)="message.noFn()" class="btn-close" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="col-md-12">
+                        <p class="text-center">{{message.text}}</p>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" (click)="message.noFn()" class="btn btn-primary">Non</button>
+                    <button type="button" (click)="message.siFn()" class="btn btn-danger">Oui</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
