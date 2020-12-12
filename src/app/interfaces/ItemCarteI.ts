@@ -13,9 +13,9 @@ export interface ItemCarteI {
     // Description
     description: string;
     // Prix
-    price: Number;
+    price: number;
     // Ordre d'affichage
-    order: Number;
+    order: number;
     // Image
     sourceImage: ImageI;
     // Entrée? plat ? dessert?

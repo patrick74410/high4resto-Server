@@ -30,15 +30,15 @@
 <div class="container">
     <mat-tab-group>
         <mat-tab label="Commandes">
-            <mat-button-toggle-group class="mt-3"  name="table" aria-label="Font Style">
-                <mat-button-toggle (change)="selectedCommande=null" (click)="selectTable(table)" *ngFor="let table of tables;trackBy:util.trackById"
-                    value="{{table.name}}">
+            <mat-button-toggle-group class="mt-3" name="table" aria-label="Font Style">
+                <mat-button-toggle (change)="selectedCommande=null" (click)="selectTable(table)"
+                    *ngFor="let table of tables;trackBy:util.trackById" value="{{table.name}}">
                     {{table.name}}
                 </mat-button-toggle>
             </mat-button-toggle-group>
-            <mat-button-toggle-group class="my-3"  name="table" aria-label="Font Style">
-                <mat-button-toggle (click)="selectCommande(commande)" *ngFor="let commande of commandes;trackBy:util.trackById"
-                    [value]="commande.id">
+            <mat-button-toggle-group class="my-3" name="table" aria-label="Font Style">
+                <mat-button-toggle (click)="selectCommande(commande)"
+                    *ngFor="let commande of commandes;trackBy:util.trackById" [value]="commande.id">
                     Commande n°{{commande.number}}
                 </mat-button-toggle>
                 <button *ngIf="selectedTable" mat-stroked-button (click)="addCommande()">Ajouter une commande</button>
@@ -48,22 +48,136 @@
                 <mat-tab label="Panier">
                     <mat-tab-group>
                         <mat-tab label="Prendre commande">
+                            <mat-button-toggle-group class="my-3" name="table" aria-label="Font Style">
+                                <mat-button-toggle (click)="selectCategory(category)"
+                                    *ngFor="let category of categoryItem;trackBy:util.trackById">
+                                    <img src="{{urlDownload}}{{category.iconImage.gridId}}" style="width:30px">
+                                    {{category.name}}
+                                </mat-button-toggle>
+                            </mat-button-toggle-group>
+                            <hr />
+                            <mat-button-toggle-group *ngIf="selectedCategoryItem" class="my-3" name="table"
+                                aria-label="Font Style">
+                                <mat-button-toggle (click)="selectItem(item)"
+                                    *ngFor="let item of items;trackBy:util.trackById">
+                                    <img src="{{urlDownload}}{{item.item.sourceImage.miniGridId}}" style="width:60px">
+                                    {{item.item.name}}
+                                    {{item.item.price}}€
+                                </mat-button-toggle>
+                            </mat-button-toggle-group>
+                            <ng-container *ngIf="selectedItem">
+                                <h3>{{selectedItem.item.name}}</h3>
 
+                                <mat-expansion-panel hideToggle>
+                                    <mat-expansion-panel-header>
+                                        <mat-panel-title>
+                                            Détail {{selectedItem.item.name}}
+                                        </mat-panel-title>
+                                    </mat-expansion-panel-header>
+
+                                    <img src="{{urlDownload}}{{selectedItem.item.sourceImage.miniGridId}}" />
+                                    <div [innerHTML]="selectedItem.item.description">
+                                    </div>
+                                    <ul>
+                                        <li *ngFor="let allergene of selectedItem.item.allergenes">
+                                            {{allergene.name}}
+                                        </li>
+                                    </ul>
+                                </mat-expansion-panel>
+                                <ng-container *ngIf="selectedItem.item.options">
+                                    <mat-card *ngFor="let option of selectedItem.item.options;let idx=index">
+                                        <mat-card-header>
+                                            <mat-card-title>{{option.label}}</mat-card-title>
+                                        </mat-card-header>
+                                        <mat-card-content>
+                                            <div *ngIf="option.unique">
+                                                <mat-radio-group aria-label="Selectionnez une option">
+                                                    <mat-radio-button #item (change)="check(idx,i,item)"
+                                                        [checked]="choix.selected" [value]="idx +',' +i" class="ml-3"
+                                                        *ngFor="let choix of option.options;let i=index" value="1">
+                                                        {{choix.label}} <span *ngIf="choix.price>0">{{choix.price}}
+                                                            €</span>
+                                                    </mat-radio-button>
+                                                </mat-radio-group>
+                                            </div>
+                                            <div *ngIf="!option.unique">
+                                                <mat-checkbox #item (change)="check(idx,i,item)" [value]="idx +',' +i"
+                                                    class="ml-3" [checked]="choix.selected"
+                                                    *ngFor="let choix of option.options;let i=index">
+                                                    {{choix.label}} <span *ngIf="choix.price>0">{{choix.price}} €</span>
+                                                </mat-checkbox>
+                                            </div>
+                                        </mat-card-content>
+                                    </mat-card>
+                                    <mat-form-field class="col-12" appearance="fill">
+                                        <mat-label>Message pour le suivant</mat-label>
+                                        <textarea matInput [(ngModel)]="message" cdkTextareaAutosize
+                                            cdkAutosizeMinRows="1" cdkAutosizeMaxRows="5" class="my-3"></textarea>
+                                    </mat-form-field>
+                                </ng-container>
+                                <h4>Prix:{{price}}€</h4>
+                                <button mat-stroked-button (click)="addItemToBasket()">Ajouter au panier</button>
+                            </ng-container>
                         </mat-tab>
                         <mat-tab label="Vue du panier">
                             <mat-tab-group>
                                 <mat-tab label="Non signalé">
-
+                                    <button *ngIf="annonce.elements.length>0" mat-stroked-button
+                                        (click)="signal(annonce)">Annoncer</button>
+                                    <mat-card *ngFor="let element of annonce.elements">
+                                        <mat-card-header>
+                                            <mat-card-title>
+                                                {{element.qty}} {{element.itemName}}
+                                            </mat-card-title>
+                                        </mat-card-header>
+                                        <mat-card-content>
+                                            <button *ngIf="addBV" (click)="addToBasket(element)"
+                                                style="font-size: x-large;" mat-mini-fab color="primary">
+                                                +
+                                            </button>
+                                            <button (click)="moveBackToStock(element)" style="font-size: x-large;"
+                                                class="ml-5" mat-mini-fab color="primary">
+                                                -
+                                            </button>
+                                        </mat-card-content>
+                                    </mat-card>
                                 </mat-tab>
                                 <mat-tab label="Vue générale">
-                                    <button mat-stroked-button (click)="finishCommande()">Marquer la commande terminée</button>
+                                    <button mat-stroked-button (click)="finishCommande()">Marquer la commande
+                                        terminée</button>
                                 </mat-tab>
                             </mat-tab-group>
                         </mat-tab>
                     </mat-tab-group>
                 </mat-tab>
                 <mat-tab label="Signalé">
-
+                    <mat-expansion-panel>
+                        <mat-expansion-panel-header>
+                            <mat-panel-title>Envoyer par catégories</mat-panel-title>>
+                        </mat-expansion-panel-header>
+                        <mat-button-toggle-group>
+                            <mat-button-toggle (click)="sendToTakeGroup(category)"
+                                *ngFor="let category of categoryItem;trackBy:util.trackById">
+                                <img src="{{urlDownload}}{{category.iconImage.gridId}}" style="width:30px">
+                                {{category.name}}
+                            </mat-button-toggle>
+                        </mat-button-toggle-group>
+                    </mat-expansion-panel>
+                    <mat-card *ngFor="let element of signaled.elements">
+                        <mat-card-header>
+                            <mat-card-title>
+                                {{element.qty}} {{element.itemName}}
+                            </mat-card-title>
+                        </mat-card-header>
+                        <mat-card-content>
+                            <mat-form-field>
+                                <mat-label>Quantité a envoyer</mat-label>
+                                <input type="number" value="1" min="1" [max]="element.qty" matInput #qty>
+                            </mat-form-field>
+                            <button mat-stroked-button (click)="sendToTakeNItem(qty.value,element)">Envoyer</button>
+                            <button mat-stroked-button (click)="sendToTakeAllItem(element)">Envoyer tout</button>
+                        </mat-card-content>
+                    </mat-card>
                 </mat-tab>
             </mat-tab-group>
         </mat-tab>

@@ -19,6 +19,11 @@ import { ServerComponent } from './server/server.component';
 import {MatTabsModule} from '@angular/material/tabs';
 import {MatExpansionModule} from '@angular/material/expansion';
 import {MatButtonToggleModule} from '@angular/material/button-toggle';
+import {MatCheckboxModule} from '@angular/material/checkbox';
+import {MatRadioModule} from '@angular/material/radio';
+import {MatCardModule} from '@angular/material/card';
+import {TextFieldModule} from '@angular/cdk/text-field';
+import {MatIconModule} from '@angular/material/icon';
 
 @NgModule({
   declarations: [
@@ -39,7 +44,12 @@ import {MatButtonToggleModule} from '@angular/material/button-toggle';
     MatButtonModule,
     MatTabsModule,
     MatExpansionModule,
-    MatButtonToggleModule
+    MatButtonToggleModule,
+    MatCheckboxModule,
+    MatRadioModule,
+    MatCardModule,
+    TextFieldModule,
+    MatIconModule
   ],
   providers: [AlertService,
     AuthGuardService,

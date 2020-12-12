@@ -10,5 +10,5 @@ export interface OrderI {
     timeToTake: string;
     toTake: boolean;
     idAnnonce?: string;
-    annonce?: string;
+    annonce: string;
 }

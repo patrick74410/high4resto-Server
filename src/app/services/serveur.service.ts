@@ -8,6 +8,7 @@ import { PreOrderI } from '../interfaces/tracability/PreOrder';
 import { OrderI } from '../interfaces/tracability/Order';
 import { TableI } from '../interfaces/TableI';
 import { CommandeI } from '../interfaces/CommandeI';
+import { Annonce } from '../interfaces/Annonce';
 
 @Injectable({
   providedIn: 'root'
@@ -22,8 +23,6 @@ export class ServeurService {
   private moveBackToStockUrl = environment.apiUrl + '/serveur/moveBackToStock/';
   private findOrderUrl=environment.apiUrl + '/serveur/findOrder/';
   private moveToTakeUrl= environment.apiUrl + '/serveur/moveToTake/';
-  private moveManyToOrderUrl=environment.apiUrl + '/serveur/moveManyToOrder/';
-  private moveManyToTakeUrl=environment.apiUrl + '/serveur/moveManyToTake/';
   private createCommandeUrl=environment.apiUrl + '/serveur/createCommande/';
   private updateCommandeUrl=environment.apiUrl + '/serveur/updateCommande/';
   private findCommandeUrl=environment.apiUrl + '/serveur/findCommande/';
@@ -80,28 +79,20 @@ export class ServeurService {
     return this.http.get<OrderI[]>(this.findOrderUrl+table)
   }
 
-  moveToPreOrder(preOrder: PreOrderI,commandeId:string): Observable<PreOrderI> {
-    return this.http.put<PreOrderI>(this.moveToPreOrderUrl+commandeId, preOrder, this.httpOptionsUpdate);
+  moveToPreOrder(preOrder: PreOrderI): Observable<PreOrderI> {
+    return this.http.put<PreOrderI>(this.moveToPreOrderUrl, preOrder, this.httpOptionsUpdate);
   }
 
-  moveToOrder(order: OrderI): Observable<OrderI> {
-    return this.http.put<OrderI>(this.moveToOrderUrl, order, this.httpOptionsUpdate);
+  moveToOrder(annonce: Annonce): Observable<OrderI> {
+    return this.http.put<OrderI>(this.moveToOrderUrl, annonce, this.httpOptionsUpdate);
   }
 
-  moveToTake(order: OrderI): Observable<OrderI> {
-    return this.http.put<OrderI>(this.moveToTakeUrl, order, this.httpOptionsUpdate);
+  moveToTake(annonce: Annonce): Observable<Annonce> {
+    return this.http.put<Annonce>(this.moveToTakeUrl, annonce, this.httpOptionsUpdate);
   }
 
-  moveManyToOrder(table:string,mandatory: string):Observable<OrderI>{
-    return this.http.get<OrderI>(this.moveManyToOrderUrl+table+"/"+mandatory);
-  }
-
-  moveManyToTake(table:string,category: string):Observable<OrderI>{
-    return this.http.get<OrderI>(this.moveManyToTakeUrl+table+"/"+category);
-  }
-
-  moveBackToStock(preOrder: PreOrderI,commandeId:string): Observable<StockI> {
-    return this.http.put<StockI>(this.moveBackToStockUrl+commandeId, preOrder, this.httpOptionsUpdate);
+  moveBackToStock(preOrder: PreOrderI): Observable<StockI> {
+    return this.http.put<StockI>(this.moveBackToStockUrl, preOrder, this.httpOptionsUpdate);
   }
 
   constructor(private http: HttpClient) { }
