@@ -119,11 +119,9 @@
                                 <button mat-stroked-button (click)="addItemToBasket()">Ajouter au panier</button>
                             </ng-container>
                         </mat-tab>
-                        <mat-tab label="Vue du panier">
-                            <mat-tab-group>
+                        <mat-tab label="Vue de la commande">
+                            <mat-tab-group (selectedTabChange)="generateResumeCommand()">
                                 <mat-tab label="Non signalé">
-                                    <button *ngIf="annonce.elements.length>0" mat-stroked-button
-                                        (click)="signal(annonce)">Annoncer</button>
                                     <mat-card *ngFor="let element of annonce.elements">
                                         <mat-card-header>
                                             <mat-card-title>
@@ -141,10 +139,76 @@
                                             </button>
                                         </mat-card-content>
                                     </mat-card>
+                                    <button *ngIf="annonce.elements.length>0" mat-stroked-button
+                                        (click)="signal(annonce)" class="my-3">Annoncer</button>
                                 </mat-tab>
-                                <mat-tab label="Vue générale">
-                                    <button mat-stroked-button (click)="finishCommande()">Marquer la commande
-                                        terminée</button>
+                                <mat-tab label="Vue générale" (click)="generateResumeCommand()">
+                                    <div style="overflow-x: hidden;">
+                                        <mat-card class="my-3">
+                                            <mat-card-header>
+                                                <mat-card-title>
+                                                    Commande {{selectedCommande.number}} pour
+                                                    {{selectedCommande.destination}} {{selectedCommande.client}}
+                                                </mat-card-title>
+                                                <hr/>
+                                            </mat-card-header>
+                                            <mat-card-content>
+                                                <mat-card class="my-3" *ngFor="let command of resumeCommand">
+                                                    <mat-card-header>
+                                                        <mat-card-title>
+                                                            {{command.categoryItemName.name}}
+                                                        </mat-card-title>
+                                                    </mat-card-header>
+                                                    <mat-card-content>
+                                                        <table class="table">
+                                                            <thead>
+                                                                <th>Qty</th>
+                                                                <th>Nom</th>
+                                                                <th>Prix</th>
+                                                            </thead>
+                                                            <tbody>
+                                                                <tr *ngFor="let element of command.elements">
+                                                                    <td>{{element.qty}}</td>
+                                                                    <td>{{element.itemName}}</td>
+                                                                    <td>{{element.price}}€</td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </mat-card-content>
+                                                    <mat-card-footer>
+                                                        <p>Sous-total:<b>{{command.subTotal}}€</b></p>
+                                                    </mat-card-footer>
+                                                </mat-card>
+                                            </mat-card-content>
+                                            <mat-card-footer>
+                                                <p>Total:<b>{{selectedCommande.totalPrice}}€</b></p>
+                                            </mat-card-footer>
+                                        </mat-card>
+                                        <mat-card>
+                                            <mat-card-header>
+                                                <mat-card-title>
+                                                    Status du payement
+                                                </mat-card-title>
+                                            </mat-card-header>
+                                            <form [formGroup]="status">
+                                                <mat-card-content>
+                                                    <mat-radio-group formControlName="status">
+                                                        <mat-radio-button value="Non payé">Non payé</mat-radio-button><br/>
+                                                        <mat-radio-button value="Payement en espèce">Payée en espèce</mat-radio-button><br/>
+                                                        <mat-radio-button value="Payement par cheque">Payée par cheque</mat-radio-button><br/>
+                                                        <mat-radio-button value="Payement par carte bleu">Payée par carte bleu</mat-radio-button><br/>
+                                                        <mat-radio-button value="Payement mixte">Payement mixte</mat-radio-button><br/>
+                                                    </mat-radio-group>
+                                                </mat-card-content>
+                                                <mat-card-footer>
+                                                    <mat-card-actions>
+                                                        <button mat-stroked-button (click)="finishCommande()">Marquer la commande
+                                                            terminée</button>
+                                                    </mat-card-actions>
+                                                </mat-card-footer>
+                                            </form>
+                                        </mat-card>
+                                    </div>
                                 </mat-tab>
                             </mat-tab-group>
                         </mat-tab>
@@ -153,7 +217,7 @@
                 <mat-tab label="Signalé">
                     <mat-expansion-panel>
                         <mat-expansion-panel-header>
-                            <mat-panel-title>Envoyer par catégories</mat-panel-title>>
+                            <mat-panel-title>Envoyer par catégories</mat-panel-title>
                         </mat-expansion-panel-header>
                         <mat-button-toggle-group>
                             <mat-button-toggle (click)="sendToTakeGroup(category)"
@@ -181,8 +245,8 @@
                 </mat-tab>
             </mat-tab-group>
         </mat-tab>
-        <mat-tab label="A faire">
-            Content 2
+        <mat-tab label="Livraison">
+            <app-delivery></app-delivery>
         </mat-tab>
         <mat-tab label="Tables">
             <mat-tab-group>

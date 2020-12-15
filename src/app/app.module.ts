@@ -24,6 +24,7 @@ import {MatRadioModule} from '@angular/material/radio';
 import {MatCardModule} from '@angular/material/card';
 import {TextFieldModule} from '@angular/cdk/text-field';
 import {MatIconModule} from '@angular/material/icon';
+import { DeliveryComponent } from './delivery/delivery.component';
 
 @NgModule({
   declarations: [
@@ -31,7 +32,8 @@ import {MatIconModule} from '@angular/material/icon';
     MessagesComponent,
     LoginComponent,
     ComfirmDialogComponent,
-    ServerComponent
+    ServerComponent,
+    DeliveryComponent
   ],
   imports: [
     ReactiveFormsModule,

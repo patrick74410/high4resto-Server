@@ -7,7 +7,7 @@ export interface ItemCategorieI {
     // Présentation de la catégorie
     description: string;
     // Ordre d'affichage
-    order?: Number;
+    order?: number;
     // Miniature
     iconImage?: ImageI;
     // Image pour la présentation

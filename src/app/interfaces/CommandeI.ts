@@ -11,6 +11,6 @@ export interface CommandeI{
   inside: string;
   items:PreOrderI[];
   finish:boolean;
-  totalPrice: string;
+  totalPrice: number;
   message: string;
 }

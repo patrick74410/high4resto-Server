@@ -9,6 +9,11 @@ import { OrderI } from '../interfaces/tracability/Order';
 import { TableI } from '../interfaces/TableI';
 import { CommandeI } from '../interfaces/CommandeI';
 import { Annonce } from '../interfaces/Annonce';
+import { PrepareI } from '../interfaces/tracability/Prepare';
+import { ToDeliveryI } from '../interfaces/tracability/ToDelivery';
+import { DeleveryI } from '../interfaces/tracability/Delevery';
+import { HistoryI } from '../interfaces/tracability/History';
+import { TrashI } from '../interfaces/tracability/Trash';
 
 @Injectable({
   providedIn: 'root'
@@ -18,29 +23,46 @@ export class ServeurService {
   private findCategoryUrl = environment.apiUrl + '/serveur/findCategory/';
   private findStockUrl = environment.apiUrl + '/serveur/findStocks/';
   private findPreOrderUrl = environment.apiUrl + '/serveur/findPreOrders/';
+  private findOrderUrl=environment.apiUrl + '/serveur/findOrder/';
+  private findCommandeUrl=environment.apiUrl + '/serveur/findCommande/';
+  private findTableUrl=environment.apiUrl + '/serveur/findTable/';
+  private findPreparedUrl=environment.apiUrl + '/serveur/findPrepared/';
+  private findToDeleveryUrl=environment.apiUrl + '/serveur/findToDelevery/';
+  private findDeleveryUrl=environment.apiUrl + '/serveur/findDelevery/';
+  private moveToToDeleveryUrl=environment.apiUrl + '/serveur/moveToToDelevery/';
+  private moveToDeleveryUrl=environment.apiUrl + '/serveur/moveToDelevery/';
+  private moveToHistoryUrl=environment.apiUrl + '/serveur/moveToHistory/';
   private moveToPreOrderUrl = environment.apiUrl + '/serveur/moveToPreorder/';
   private moveToOrderUrl = environment.apiUrl + '/serveur/moveToOrder/';
   private moveBackToStockUrl = environment.apiUrl + '/serveur/moveBackToStock/';
-  private findOrderUrl=environment.apiUrl + '/serveur/findOrder/';
   private moveToTakeUrl= environment.apiUrl + '/serveur/moveToTake/';
   private createCommandeUrl=environment.apiUrl + '/serveur/createCommande/';
   private updateCommandeUrl=environment.apiUrl + '/serveur/updateCommande/';
-  private findCommandeUrl=environment.apiUrl + '/serveur/findCommande/';
-  private findTableUrl=environment.apiUrl + '/serveur/findTable/';
+  private updateTableUrl=environment.apiUrl + '/serveur/updateTable/';
   private deleteTableUrl=environment.apiUrl + '/serveur/deleteTable/';
   private insertTableUrl=environment.apiUrl + '/serveur/insertTable/';
-  private updateTableUrl=environment.apiUrl + '/serveur/updateTable/';
+  private movePreparedToTrashUrl=environment.apiUrl + '/serveur/movePreparedToTrash/';
+  private moveToDeleveryToTrashUrl=environment.apiUrl + '/serveur/moveToDeleveryToTrash/';
+  private moveDeleveryToTrashUrl=environment.apiUrl + '/serveur/moveDeleveryToTrash/';
 
   private httpOptionsUpdate = {
     headers: new HttpHeaders({ 'Content-Type': 'application/json' })
   };
 
-  createCommande(table: string,mandatory: string): Observable<CommandeI> {
-    return this.http.get<CommandeI>(this.createCommandeUrl+table+"/"+mandatory);
+
+  findPrepared(mandatory: string): Observable<PrepareI[]>
+  {
+    return this.http.get<PrepareI[]>(this.findPreparedUrl+mandatory);
   }
 
-  updateCommande(commande:CommandeI): Observable<CommandeI>{
-    return this.http.put<CommandeI>(this.updateCommandeUrl,commande,this.httpOptionsUpdate)
+  findToDelevery(mandatory: string):Observable<ToDeliveryI[]>
+  {
+    return this.http.get<ToDeliveryI[]>(this.findToDeleveryUrl+mandatory);
+  }
+
+  findDelevery(mandatory: string): Observable<DeleveryI[]>
+  {
+    return this.http.get<DeleveryI[]>(this.findDeleveryUrl+mandatory);
   }
 
   findCommande(table: string,mandatory: string): Observable<CommandeI[]>{
@@ -49,6 +71,14 @@ export class ServeurService {
 
   findTable():Observable<TableI[]>{
     return this.http.get<TableI[]>(this.findTableUrl);
+  }
+
+  createCommande(table: string,mandatory: string): Observable<CommandeI> {
+    return this.http.get<CommandeI>(this.createCommandeUrl+table+"/"+mandatory);
+  }
+
+  updateCommande(commande:CommandeI): Observable<CommandeI>{
+    return this.http.put<CommandeI>(this.updateCommandeUrl,commande,this.httpOptionsUpdate)
   }
 
   deleteTable(table:TableI):Observable<any> {
@@ -93,6 +123,30 @@ export class ServeurService {
 
   moveBackToStock(preOrder: PreOrderI): Observable<StockI> {
     return this.http.put<StockI>(this.moveBackToStockUrl, preOrder, this.httpOptionsUpdate);
+  }
+
+  moveToToDelevery(toDelevery:ToDeliveryI): Observable<ToDeliveryI>{
+    return this.http.put<ToDeliveryI>(this.moveToToDeleveryUrl, toDelevery, this.httpOptionsUpdate);
+  }
+
+  moveToDelevery(delevery:DeleveryI): Observable<DeleveryI>{
+    return this.http.put<DeleveryI>(this.moveToDeleveryUrl, delevery, this.httpOptionsUpdate);
+  }
+
+  moveToHistory(history:HistoryI):Observable<HistoryI>{
+    return this.http.put<HistoryI>(this.moveToHistoryUrl, history, this.httpOptionsUpdate)
+  }
+
+  movePreparedToTrash(prepare:PrepareI):Observable<TrashI>{
+    return this.http.put<TrashI>(this.movePreparedToTrashUrl,prepare, this.httpOptionsUpdate);
+  }
+
+  moveToDeleveryToTrash(toDelevery:ToDeliveryI): Observable<TrashI>{
+    return this.http.put<TrashI>(this.moveToDeleveryToTrashUrl, toDelevery, this.httpOptionsUpdate);
+  }
+
+  moveDeleveryToTrash(delevery: DeleveryI): Observable<TrashI>{
+    return this.http.put<TrashI>(this.moveDeleveryToTrashUrl, delevery, this.httpOptionsUpdate);
   }
 
   constructor(private http: HttpClient) { }

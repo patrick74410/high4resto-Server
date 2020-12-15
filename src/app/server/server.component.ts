@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { take } from 'rxjs/operators';
 import { AlertService } from '../comfirm-dialog/alert.service';
@@ -16,20 +16,33 @@ import { MessageService } from '../messages/message.service';
 import { AuthentificationService } from '../services/Auth/authentification.service';
 import { ExpireService } from '../services/Auth/expire.service';
 import { ServeurService } from '../services/serveur.service';
+import { Socket } from '../services/Socket';
 declare var bootstrap: any;
+
+const groupBy = <T, K extends keyof any>(list: T[], getKey: (item: T) => K) =>
+  list.reduce((previous, currentItem) => {
+    const group = getKey(currentItem);
+    if (!previous[group]) previous[group] = [];
+    previous[group].push(currentItem);
+    return previous;
+  }, {} as Record<K, T[]>);
 
 @Component({
   selector: 'app-server',
   templateUrl: './server.component.html',
   styleUrls: ['./server.component.css']
 })
+
 export class ServerComponent implements OnInit {
   tables: TableI[] = [];
   commandes: CommandeI[] = [];
+  resumeCommand:ResumeCommand[]=[];
+
   categoryItem: ItemCategorieI[] = [];
   items: StockI[] = [];
   preoOrders: PreOrderI[] = [];
   orders:OrderI[]=[];
+
 
   annonce: Annonce;
   signaled: Annonce;
@@ -58,6 +71,22 @@ export class ServerComponent implements OnInit {
     place: new FormControl('', Validators.required)
   })
 
+  status = new FormGroup({
+    status:new FormControl('', Validators.required)
+  })
+
+  private updateForSend(toSend:Annonce)
+  {
+    this.serverService.moveToTake(toSend).pipe(take(1)).subscribe(annonce=>{
+      this.serverService.getOrder(this.selectedTable.name).pipe(take(1)).subscribe(orders=>{
+        this.orders=orders.filter(a=>a.preOrder.orderNumber==this.selectedCommande.id).filter(a=>!a.toTake);
+        this.orders.forEach(order=>{
+          this.addItemToSignaled(order);
+        })
+      });
+    })
+  }
+
   sendToTakeGroup(category:ItemCategorieI): void
   {
     var toSend:Annonce=new Annonce();
@@ -71,14 +100,7 @@ export class ServerComponent implements OnInit {
     }
     this.signaled=new Annonce();
     this.orders=[];
-    this.serverService.moveToTake(toSend).pipe(take(1)).subscribe(annonce=>{
-      this.serverService.getOrder(this.selectedTable.name).pipe(take(1)).subscribe(orders=>{
-        this.orders=orders.filter(a=>a.preOrder.orderNumber==this.selectedCommande.id).filter(a=>!a.toTake);
-        this.orders.forEach(order=>{
-          this.addItemToSignaled(order);
-        })
-      });
-    })
+    this.updateForSend(toSend);
   }
 
   sendToTakeNItem(qty:number,element: ElementAnnonce):void
@@ -93,14 +115,7 @@ export class ServerComponent implements OnInit {
     toSend.elements.push(elementAnnonce);
     this.signaled=new Annonce();
     this.orders=[];
-    this.serverService.moveToTake(toSend).pipe(take(1)).subscribe(annonce=>{
-      this.serverService.getOrder(this.selectedTable.name).pipe(take(1)).subscribe(orders=>{
-        this.orders=orders.filter(a=>a.preOrder.orderNumber==this.selectedCommande.id).filter(a=>!a.toTake);
-        this.orders.forEach(order=>{
-          this.addItemToSignaled(order);
-        })
-      });
-    })
+    this.updateForSend(toSend);
   }
 
   sendToTakeAllItem(element:ElementAnnonce): void {
@@ -108,26 +123,24 @@ export class ServerComponent implements OnInit {
     toSend.table=this.selectedTable.name;
     toSend.elements.push(element);
     this.signaled.elements.splice(this.signaled.elements.indexOf(element),1);
-    this.serverService.moveToTake(toSend).pipe(take(1)).subscribe(annonce=>{
-      this.serverService.getOrder(this.selectedTable.name).pipe(take(1)).subscribe(orders=>{
-        this.orders=orders.filter(a=>a.preOrder.orderNumber==this.selectedCommande.id).filter(a=>!a.toTake);
-        this.orders.forEach(order=>{
-          this.addItemToSignaled(order);
-        })
-      });
-    })
+    this.updateForSend(toSend);
+  }
+
+  private updateOrder()
+  {
+    this.serverService.getOrder(this.selectedTable.name).pipe(take(1)).subscribe(orders=>{
+      this.orders=orders.filter(a=>a.preOrder.orderNumber==this.selectedCommande.id).filter(a=>!a.toTake);
+      this.orders.forEach(order=>{
+        this.addItemToSignaled(order);
+      })
+    });
   }
 
   signal(annonce: Annonce)
   {
     this.serverService.moveToOrder(annonce).pipe(take(1)).subscribe(result=>{
       this.annonce=new Annonce();
-      this.serverService.getOrder(this.selectedTable.name).pipe(take(1)).subscribe(orders=>{
-        this.orders=orders.filter(a=>a.preOrder.orderNumber==this.selectedCommande.id).filter(a=>!a.toTake);
-        this.orders.forEach(order=>{
-          this.addItemToSignaled(order);
-        })
-      });
+      this.updateOrder();
     });
   }
 
@@ -143,7 +156,7 @@ export class ServerComponent implements OnInit {
           result.messageToNext = this.message;
           this.preoOrders.push(result);
           this.selectedCommande.items.push(result);
-          this.addItemToAnnonce(result);
+          this.addItemToAnnonce(result,this.annonce);
         });
       }
     });
@@ -190,16 +203,20 @@ export class ServerComponent implements OnInit {
       element.itemName = name;
       element.itemId = result.preOrder.stock.item.id;
       element.qty = 1
+      element.price = result.preOrder.stock.item.price;
       element.orders.push(result);
       this.signaled.elements.push(element);
+      this.signaled.totalPrice+=element.price;
     }
     else {
       this.signaled.elements[elementIndex].qty += 1;
+      this.signaled.elements[elementIndex].price = result.preOrder.stock.item.price*this.signaled.elements[elementIndex].qty;
       this.signaled.elements[elementIndex].orders.push(result);
+      this.signaled.totalPrice+=this.signaled.elements[elementIndex].price ;
     }
   }
 
-  private addItemToAnnonce(result: PreOrderI) {
+  private addItemToAnnonce(result: PreOrderI,annonceDest:Annonce ) {
     var elementIndex: number = -1;
     var index = 0;
 
@@ -213,7 +230,7 @@ export class ServerComponent implements OnInit {
 
     name += result.messageToNext;
 
-    for (let element of this.annonce.elements) {
+    for (let element of annonceDest.elements) {
       if (element.itemName == name) {
         elementIndex = index;
         break;
@@ -223,15 +240,66 @@ export class ServerComponent implements OnInit {
     if (elementIndex == -1) {
       var element: ElementAnnonce = new ElementAnnonce();
       element.itemName = name;
+      element.itemCategory=result.stock.item.categorie;
       element.itemId = result.stock.item.id;
       element.qty = 1
-      element.orders.push({ preOrder: result, mandatory: this.authenticationService.userName, deleveryMode: "inside" } as OrderI);
-      this.annonce.elements.push(element);
+      element.price = result.stock.item.price;
+      element.orders.push({ preOrder: result, mandatory: this.authenticationService.userName(), deleveryMode: "inside" } as OrderI);
+      annonceDest.elements.push(element);
+      annonceDest.totalPrice+=element.price;
     }
     else {
-      this.annonce.elements[elementIndex].qty += 1;
-      this.annonce.elements[elementIndex].orders.push({ preOrder: result, mandatory: this.authenticationService.userName, deleveryMode: "inside" } as OrderI);
+      annonceDest.elements[elementIndex].itemCategory=result.stock.item.categorie;
+      annonceDest.elements[elementIndex].qty += 1;
+      annonceDest.elements[elementIndex].price = result.stock.item.price*annonceDest.elements[elementIndex].qty;
+      annonceDest.elements[elementIndex].orders.push({ preOrder: result, mandatory: this.authenticationService.userName(), deleveryMode: "inside" } as OrderI);
+      annonceDest.totalPrice+=annonceDest.elements[elementIndex].price;
     }
+
+  }
+
+  public generateResumeCommand(): void
+  {
+    this.resumeCommand=[];
+    var resume=new Annonce();
+    this.selectedCommande.items.forEach(preOrder=>{
+      this.addItemToAnnonce(preOrder,resume)
+    })
+
+    var tpResume:Record<string,ElementAnnonce[]>=groupBy(resume.elements, i => i.itemCategory.name);
+    for(let key in tpResume)
+    {
+      var tp=new ResumeCommand();
+      for(let category of this.categoryItem)
+      {
+        if(category.name==key)
+        {
+          tp.categoryItemName=category;
+          break;
+        }
+      }
+      tp.elements=tpResume[key];
+      var tot:number=0;
+      tp.elements.forEach(element=>{
+        tot+=element.price
+      })
+      tp.subTotal=tot;
+      this.resumeCommand.push(tp);
+    }
+    this.resumeCommand=this.resumeCommand.sort((a,b)=>{
+      if(a.categoryItemName.order>b.categoryItemName.order)
+      return 1;
+      else if(a.categoryItemName.order<b.categoryItemName.order)
+      return -1;
+      else return 0;
+    })
+
+    var totalPrice:number=0;
+
+    this.resumeCommand.forEach(a=>totalPrice+=a.subTotal);
+
+    this.selectedCommande.totalPrice=totalPrice;
+    this.serverService.updateCommande(this.selectedCommande).pipe(take(1)).subscribe();
   }
 
   addItemToBasket(): void {
@@ -240,7 +308,7 @@ export class ServerComponent implements OnInit {
       result.messageToNext = this.message;
       this.preoOrders.push(result);
       this.selectedCommande.items.push(result);
-      this.addItemToAnnonce(result);
+      this.addItemToAnnonce(result,this.annonce);
       this.message = "";
       this.serverService.getStock(this.selectedCategoryItem).pipe(take(1)).subscribe(items => this.items = items)
       this.selectedItem = null;
@@ -248,12 +316,17 @@ export class ServerComponent implements OnInit {
   }
 
   finishCommande(): void {
+
+    this.resumeCommand=[];
     let that = this;
     this.alertService.confirmThis("Êtes-vous sur de vouloir terminer la table ?", function () {
       that.selectedCommande.finish = true;
+      console.log(that.status.get("status").value);
+      that.selectedCommande.status=that.status.get("status").value;
       that.serverService.updateCommande(that.selectedCommande).pipe(take(1)).subscribe(t => {
-        that.serverService.findCommande(that.selectedTable.name, that.authenticationService.userName).pipe(take(1)).subscribe(commandes => {
+        that.serverService.findCommande(that.selectedTable.name, that.authenticationService.userName()).pipe(take(1)).subscribe(commandes => {
           that.commandes = commandes;
+          that.selectedCommande=null;
         })
       })
 
@@ -282,7 +355,7 @@ export class ServerComponent implements OnInit {
 
   selectTable(table: TableI) {
     this.selectedTable = table;
-    this.serverService.findCommande(table.name, this.authenticationService.userName).pipe(take(1)).subscribe(commandes => {
+    this.serverService.findCommande(table.name, this.authenticationService.userName()).pipe(take(1)).subscribe(commandes => {
       this.commandes = commandes;
     });
 
@@ -296,15 +369,10 @@ export class ServerComponent implements OnInit {
     this.serverService.getPreOrder(this.selectedTable.name).pipe(take(1)).subscribe(preOrders => {
       this.preoOrders = preOrders.filter(a => a.orderNumber == commande.id);
       this.preoOrders.forEach(preOrder => {
-        this.addItemToAnnonce(preOrder);
+        this.addItemToAnnonce(preOrder,this.annonce);
       })
     });
-    this.serverService.getOrder(this.selectedTable.name).pipe(take(1)).subscribe(orders=>{
-      this.orders=orders.filter(a=>a.preOrder.orderNumber==commande.id).filter(a=>!a.toTake);
-      this.orders.forEach(order=>{
-        this.addItemToSignaled(order);
-      })
-    });
+    this.updateOrder();
   }
 
   selectCategory(category: ItemCategorieI) {
@@ -314,7 +382,7 @@ export class ServerComponent implements OnInit {
   }
 
   addCommande(): void {
-    this.serverService.createCommande(this.selectedTable.name, this.authenticationService.userName).pipe(take(1)).subscribe(commande => {
+    this.serverService.createCommande(this.selectedTable.name, this.authenticationService.userName()).pipe(take(1)).subscribe(commande => {
       this.commandes.push(commande);
     })
   }
@@ -367,6 +435,7 @@ export class ServerComponent implements OnInit {
 
   ngOnInit(): void {
     this.expireService.check();
+
     this.serverService.findTable().pipe(take(1)).subscribe(tables => {
       this.tables = tables;
     });
@@ -374,4 +443,11 @@ export class ServerComponent implements OnInit {
     this.updateModal = new bootstrap.Modal(document.getElementById('updateModal'), {});
   }
 
+}
+
+export class ResumeCommand
+{
+  categoryItemName:ItemCategorieI;
+  elements:ElementAnnonce[]=[];
+  subTotal:number=0;
 }
